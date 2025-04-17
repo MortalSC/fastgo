@@ -1,0 +1,9 @@
+# MySQL 数据库相关配置
+mysql:
+  addr: 127.0.0.1:3306
+  username: fastgo
+  password: fastgo931396
+  database: fastgo
+  max-idle-connections: 100
+  max-open-connections: 100
+  max-connection-life-time: 10s
