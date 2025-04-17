@@ -1,9 +1,6 @@
 package app
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/MortalSC/fastgo/cmd/fg-apiserver/app/options"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -26,22 +23,8 @@ func NewFastGOCommand() *cobra.Command {
 		SilenceUsage: true,
 		// 指定调用 cmd.Execute() 时，执行的 Run 函数
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// 使用 viper 将配置解析到 opts 中
-			if err := viper.Unmarshal(opts); err != nil {
-				return err
-			}
+			return run(opts)
 
-			// 对命令行选项值进行校验
-			if err := opts.Validate(); err != nil {
-				return err
-			}
-
-			fmt.Printf("Read MySQL host from Viper: %s\n\n", viper.GetString("mysql.host"))
-
-			jsonData, _ := json.MarshalIndent(opts, "", "  ")
-			fmt.Println(string(jsonData))
-
-			return nil
 		},
 		// 设置命令运行时的参数检查，不需要指定命令行参数。eg：./fg-apiserver param1 param2
 		Args: cobra.NoArgs,
@@ -53,4 +36,30 @@ func NewFastGOCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&configFile, "config", "c", filePath(), "Path to the fg-apiserver configuration file.")
 
 	return cmd
+}
+
+func run(opts *options.ServerOptions) error {
+	// 使用 viper 将配置解析到 opts 中
+	if err := viper.Unmarshal(opts); err != nil {
+		return err
+	}
+
+	// 对命令行选项值进行校验
+	if err := opts.Validate(); err != nil {
+		return err
+	}
+
+	// 获取应用配置
+	cfg, err := opts.Config()
+	if err != nil {
+		return err
+	}
+
+	// 创建服务器实例
+	server, err := cfg.NewServer()
+	if err != nil {
+		return err
+	}
+
+	return server.Run()
 }
